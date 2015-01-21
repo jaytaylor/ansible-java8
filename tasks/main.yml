@@ -5,27 +5,33 @@
 #- name: add key server
 #  shell: apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886
 #  sudo: yes
+- name: Prevent apt repository caching for download.oracle.com
+  lineinfile: dest=/etc/apt/apt.conf.d/99proxy regexp="^Acquire::http::Proxy\s*{\s*download.oracle.com DIRECT\s*;\s*}\s*;\s*" line="Acquire::http::Proxy { download.oracle.com DIRECT; };" state=present create=yes
 
-- name: add add-apt-repostory
+- name: Install software-properties-common
   apt: pkg=software-properties-common state=present update_cache=yes
   sudo: yes 
     
-- name: add add-apt-repostory
+- name: Install python-software-properties
   apt: pkg=python-software-properties state=present update_cache=yes
   sudo: yes 
   when: ansible_distribution_release == "precise"
 
-- name: add webupd8 ppa
-  apt_repository: repo='ppa:webupd8team/java'
+- name: Add webupd8team/java PPA
+  apt_repository: repo="ppa:webupd8team/java"
 
-- name: update
+- name: Refresh apt
   shell: apt-get update
   sudo: yes
 
-- name: auto accept oracle jdk license
+- name: Auto-accept oracle jdk license
   shell: echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
   sudo: yes
 
-- name: install java8
-  shell: apt-get install -y oracle-java8-installer ca-certificates
+- name: Install java8
+  apt: name=oracle-java8-installer state=present
+  sudo: yes
+
+- name: Install ca-certificates
+  apt: name=ca-certificates state=present
   sudo: yes
